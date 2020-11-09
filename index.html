@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="kr">
+  <head>
+    <title>Draw and Modify Features</title>
+    <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+    <script src="https://unpkg.com/elm-pep"></script>
+    
+    <style>
+      .map {
+        width: 1000px;
+        height: 600px;
+        margin : 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map" class="map"></div>
+    <form class="form-inline">
+      <label>Geometry type &nbsp;</label>
+      <select id="type">
+        <option value="Polygon">Polygon</option>
+        <!-- <option value="Modify">Modify</option>
+        <option value="Select">Select&Move</option>
+        <option value="Remove">Remove</option> -->
+        <option value="Area">Area</option>
+        <option value="Building">Building</option>
+        <option value="Road">Road</option>
+        <option value="None">None</option>
+      </select>
+    <br><button id="securities">경비실</button>
+      <br/>
+      <div id="mouse-position"></div>
+      <label for="name">이름</label>
+      <input type="text" id="name" name="name"/>
+      <br />
+      <label for="phoneNum">연락처</label>
+      <input type="text" id="phoneNum" />
+      <br />
+      <label for="carNum">차량번호</label>
+      <input type="text" id="carNum" />
+      <button id="create">QR생성</button>
+    </form>
+    
+    <div id="qr" style="width: 300px; height: 300px;"></div>
+    <!-- <div id="marker"><img src="../../Pictures/img1.png" alt=""></div> -->
+    <!-- <img src="../../Downloads/delete-button.svg" alt="" style="height: 15px; width: 15px;" id="removeBtn"> -->
+    <a href="./hook.html">입출차QR</a>
+    <script src="main.js"></script>
+    <!-- <script src="leaflet.js"></script> -->
+    <script src="qr.js"></script>
+    
+  </body>
+</html>

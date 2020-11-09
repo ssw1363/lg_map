@@ -1,0 +1,17 @@
+{
+  "name": "draw-and-modify-features",
+  "dependencies": {
+    "moment": "^2.29.1",
+    "ol": "^6.4.3",
+    "qrcode-svg": "^1.1.0",
+    "qrcodesvg": "^1.0.2"
+  },
+  "devDependencies": {
+    "cssnano": "^4.1.10",
+    "parcel": "1.11.0"
+  },
+  "scripts": {
+    "start": "parcel index.html -p 7171",
+    "build": "parcel build --experimental-scope-hoisting --public-url . index.html"
+  }
+}

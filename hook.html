@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="kr">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <input type="text" name ='search' id='search'>
+    <textarea name="focus" id="focus" cols="30" rows="5"></textarea></br>
+    <label for="info" id="qrInfo"></label>
+</body>
+<script>
+    const qrinput = document.getElementById('focus');
+    const search = document.getElementById('search');
+    const info = document.getElementById('qrInfo');
+    search.addEventListener('blur', () => {
+        search.value = null
+    })
+    qrinput.addEventListener('blur', () => {
+        qrinput.value = null
+    })
+    window.onload = function() {
+        window.addEventListener('keydown',(e)=>{
+            //검색창이 아닐때 QR 입력창으로 focus
+            if( document.activeElement !== search ){
+                qrinput.focus();
+                if(e.keyCode === 13){
+                    info.innerText = qrinput.value;
+                    qrinput.value = null;
+                }
+            }
+        });
+    }
+
+</script>
+</html>
