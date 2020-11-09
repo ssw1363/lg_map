@@ -6,7 +6,7 @@ import Polygon from 'ol/geom/Polygon';
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style";
 import { Draw, Modify, Snap, Select, Translate } from "ol/interaction";
 import { MousePosition, defaults as defaultControls, FullScreen, ZoomToExtent } from "ol/control";
-import { fromLonLat, transform as tf, transformExtent, Projection } from "ol/proj";
+import { fromLonLat, transform as tf, transformExtent, Projection, get } from "ol/proj";
 import { createStringXY } from "ol/coordinate";
 import { OSM,  Vector as VectorSource , ImageStatic} from "ol/source";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
@@ -43,7 +43,7 @@ var vector = new VectorLayer({
   }),
   new Style({
     image: new CircleStyle({
-      radius: 2,
+      radius: 0,
       fill: new Fill({
         // color: 'orange'
       }),
@@ -71,11 +71,11 @@ var select = new Select({
         color: '#4a0404'
       }),
     }),
-    // geometry: function(feature) {
-    //   // return the coordinates of the first ring of the polygon
-    //   var coordinates = feature.getGeometry().getCoordinates()[0];
-    //   return new MultiPoint(coordinates);
-    // }
+    geometry: function(feature) {
+      // return the coordinates of the first ring of the polygon
+      var coordinates = feature.getGeometry().getCoordinates()[0];
+      return new MultiPoint(coordinates);
+    }
   })
 ]
 }
@@ -85,13 +85,61 @@ var translate = new Translate({
 });
 var modify = new Modify({ features: select.getFeatures() });
 var draw, snap; // global so we can remove them later
+
+
+var geoType = document.getElementById("geo_type");
 var typeSelect = document.getElementById("type");
-
-
+var geoValue = geoType.value;
+var extent_type ;
+function setGeoType() {
+  if(geoValue === 'Constant'){
+    extent_type = extents.LG
+  }else if(geoValue === 'Coord') {
+    extent_type = extents.LG2
+  }
+  return extent_type;
+}
+setGeoType();
+geoType.onchange= function(){
+  extent_type = setGeoType();
+  console.log(extent_type)
+  document.getElementById('map').innerHTML = '';
+  projection = new Projection({
+    code: 'xkcd-image',
+    units: 'pixels',
+    extent: extent_type,
+  });
+  image = new Image({
+    source: new ImageStatic({
+      // url : 'http://mpole.co.kr/resource/img/mpole/LG.png',
+      url : 'http://mpole.co.kr/resource/img/mpole/LG평택map_9000.png',
+      crossOrigin: '',
+      projection: projection,
+      imageExtent: extent_type
+    })
+  })
+  tocenter = new ZoomToExtent({
+    extent: extent_type,
+    label: center_img
+  })
+  view = new View({
+    center: getCenter(extent_type),
+    projection: projection,
+    zoom: initialZoom,
+    minZoom: 2,
+    maxZoom: 5 
+  })
+  map = new Map({
+    controls : defaultControls().extend([new FullScreen(), tocenter , mousePositionCtrl]),
+    layers: [  image, vector ],
+    target: "map",
+    view: view
+  });
+};
 var projection = new Projection({
   code: 'xkcd-image',
   units: 'pixels',
-  extent: extents.LG2,
+  extent: extent_type,
 });
 
 
@@ -108,7 +156,7 @@ var image = new Image({
     url : 'http://mpole.co.kr/resource/img/mpole/LG평택map_9000.png',
     crossOrigin: '',
     projection: projection,
-    imageExtent: extents.LG2
+    imageExtent: extent_type
   })
 })
   
@@ -124,7 +172,7 @@ var mousePositionCtrl = new MousePosition({
 var center_img = document.createElement('img'); 
 
 var tocenter = new ZoomToExtent({
-  extent: extents.LG2,
+  extent: extent_type,
   label: center_img
 })
 
@@ -137,7 +185,7 @@ function getMinZoom() {
 
 var initialZoom = getMinZoom();
 var view = new View({
-  center: getCenter(extents.LG2),
+  center: getCenter(extent_type),
   projection: projection,
   zoom: initialZoom,
   minZoom: 2,
@@ -151,12 +199,13 @@ var map = new Map({
   view: view
 });
 
-window.addEventListener('resize', function () {
+//지도 사이즈에 맞춰서 minZoom 세팅
+addEvent(window, 'resize', ()=>{
   var minZoom = getMinZoom();
   if (minZoom !== view.getMinZoom()) {
     view.setMinZoom(minZoom);
   }
-});
+})
 
 //지도 기능 추가
 function addInteractions() {
@@ -219,28 +268,21 @@ function addInteractions() {
 var selecting = () => {
   select.once("select", ()=> {
     map.addInteraction(modify);
-    
-    document.addEventListener("keydown", (e) => {
+    addEvent(document ,"keydown", (e) => {
       const keyCode = e.keyCode;
-      if(keyCode === 8) {
-        remove()
-        // console.log(target.selected[0])
-        // source.removeFeature(target.selected[0]);
-      }
-    })
+      if(keyCode === 8) remove();
+    });
   })
   select.on('select',(target) => {
     if(target.deselected.length > 0) {
-
       console.log(target.deselected[0].getGeometry().getCoordinates())
     }
   })
 }
 
 //도형 제거
-// var selectedFeatures = select.getFeatures();
-function remove() {
-  var selectFeature = select.getFeatures();
+var selectFeature = select.getFeatures();
+var remove = () => {
   if(selectFeature){
     source.removeFeature(selectFeature.getArray()[0])
     selectFeature.clear()
@@ -248,6 +290,7 @@ function remove() {
 }
 
 var coordList = document.getElementById('coord_list');
+
 //좌표 가져오기
 var loadFeatures = (coords) => {
   coordList.innerHTML = "";
@@ -258,12 +301,21 @@ var loadFeatures = (coords) => {
     btn = document.createElement('button');
     br= document.createElement('br');
     btn.setAttribute('value', feature.ol_uid);
+    btn.setAttribute('class', 'btnList');
     btn.innerText = feature.ol_uid;
     list.push(feature);
     coordList.append(btn,br);
+
+    addEvent(btn, "click", (e)=> {
+      e.preventDefault();
+      selectFeature.clear()
+      var features = source.getFeatureByUid(e.target.value);
+      selectFeature.push(features)
+    })
   }); 
   return list;
 }
+
 
 /**
  * Handle change event.
@@ -296,13 +348,14 @@ function tfPoint2(coord) {
 
 //경비실 위치 확인
 const secu = document.getElementById('securities');
-secu.addEventListener('click', (e)=>{
+
+addEvent(secu, 'click', (e) => {
+  typeSelect.value = 'None'
   e.preventDefault();
   source.clear()
   showPoint(extents.security1)
   showPoint(extents.security2)
   showPoint(extents.security3)
-  
 })
 source.on('addfeature', function (target) {
   flash(target.feature);
@@ -348,4 +401,10 @@ function flash(feature) {
     // tell OpenLayers to continue postrender animation
     map.render();
   }
+}
+
+
+function addEvent(elem, event, func ) {
+  if (!!window.attachEvent) elem.attachEvent('on' + event, func);
+  else                      elem.addEventListener(event, func, false);
 }
