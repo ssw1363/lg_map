@@ -1,0 +1,16 @@
+.map {
+    width: 1000px;
+    height: 600px;
+    margin : 0;
+    float: left;
+  }
+  
+  #coord_list {
+    float: left;
+    width: calc(100% - 1000px);
+    height: 600px;
+  }
+  .ol-zoom-extent >button {
+    background-image: url(/resource/free-icon-center-focus-565785.png) ;
+    background-size: cover;
+  }

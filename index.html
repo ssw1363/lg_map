@@ -3,29 +3,21 @@
   <head>
     <title>Draw and Modify Features</title>
     <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+    <link rel="stylesheet" href="./src/css/style.css">
     <script src="https://unpkg.com/elm-pep"></script>
     
-    <style>
-      .map {
-        width: 1000px;
-        height: 600px;
-        margin : 0;
-      }
-    </style>
   </head>
   <body>
     <div id="map" class="map"></div>
+    <div id="coord_list"></div>
     <form class="form-inline">
       <label>Geometry type &nbsp;</label>
       <select id="type">
-        <option value="Polygon">Polygon</option>
-        <!-- <option value="Modify">Modify</option>
-        <option value="Select">Select&Move</option>
-        <option value="Remove">Remove</option> -->
+        <!-- <option value="Polygon">Polygon</option> -->
+        <option value="None">None</option>
         <option value="Area">Area</option>
         <option value="Building">Building</option>
         <option value="Road">Road</option>
-        <option value="None">None</option>
       </select>
     <br><button id="securities">경비실</button>
       <br/>
@@ -42,12 +34,10 @@
     </form>
     
     <div id="qr" style="width: 300px; height: 300px;"></div>
-    <!-- <div id="marker"><img src="../../Pictures/img1.png" alt=""></div> -->
-    <!-- <img src="../../Downloads/delete-button.svg" alt="" style="height: 15px; width: 15px;" id="removeBtn"> -->
     <a href="./hook.html">입출차QR</a>
-    <script src="main.js"></script>
+    <script src="./src/js/main.js"></script>
     <!-- <script src="leaflet.js"></script> -->
-    <script src="qr.js"></script>
-    
+    <script src="./src/js/qr.js"></script>
+    <svg ></svg>
   </body>
 </html>

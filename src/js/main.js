@@ -5,7 +5,7 @@ import Feature from 'ol/Feature';
 import Polygon from 'ol/geom/Polygon';
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style";
 import { Draw, Modify, Snap, Select, Translate } from "ol/interaction";
-import { MousePosition, defaults as defaultControls, FullScreen, Zoom } from "ol/control";
+import { MousePosition, defaults as defaultControls, FullScreen, ZoomToExtent } from "ol/control";
 import { fromLonLat, transform as tf, transformExtent, Projection } from "ol/proj";
 import { createStringXY } from "ol/coordinate";
 import { OSM,  Vector as VectorSource , ImageStatic} from "ol/source";
@@ -43,16 +43,11 @@ var vector = new VectorLayer({
   }),
   new Style({
     image: new CircleStyle({
-      radius: 0,
+      radius: 2,
       fill: new Fill({
         // color: 'orange'
       }),
     }),
-    geometry: function(feature) {
-      // return the coordinates of the first ring of the polygon
-      var coordinates = feature.getGeometry().getCoordinates()[0];
-      return new MultiPoint(coordinates);
-    }
   })
 ]
 });
@@ -76,11 +71,11 @@ var select = new Select({
         color: '#4a0404'
       }),
     }),
-    geometry: function(feature) {
-      // return the coordinates of the first ring of the polygon
-      var coordinates = feature.getGeometry().getCoordinates()[0];
-      return new MultiPoint(coordinates);
-    }
+    // geometry: function(feature) {
+    //   // return the coordinates of the first ring of the polygon
+    //   var coordinates = feature.getGeometry().getCoordinates()[0];
+    //   return new MultiPoint(coordinates);
+    // }
   })
 ]
 }
@@ -88,7 +83,7 @@ var select = new Select({
 var translate = new Translate({
   features: select.getFeatures()
 });
-var modify = new Modify({ source: source });
+var modify = new Modify({ features: select.getFeatures() });
 var draw, snap; // global so we can remove them later
 var typeSelect = document.getElementById("type");
 
@@ -126,6 +121,13 @@ var mousePositionCtrl = new MousePosition({
   undefinedHTML: '&nbsp;'
 });
 
+var center_img = document.createElement('img'); 
+
+var tocenter = new ZoomToExtent({
+  extent: extents.LG2,
+  label: center_img
+})
+
 var viewport = document.getElementById('map');
 
 function getMinZoom() {
@@ -143,7 +145,7 @@ var view = new View({
 })
 //지도 생성
 var map = new Map({
-  controls : defaultControls().extend([new FullScreen(),mousePositionCtrl]),
+  controls : defaultControls().extend([new FullScreen(), tocenter , mousePositionCtrl]),
   layers: [  image, vector ],
   target: "map",
   view: view
@@ -155,8 +157,6 @@ window.addEventListener('resize', function () {
     view.setMinZoom(minZoom);
   }
 });
-
-var selectedFeatures = select.getFeatures();
 
 //지도 기능 추가
 function addInteractions() {
@@ -179,45 +179,29 @@ function addInteractions() {
         
       });
     // 도형 수정 (수정한 좌표영역 )
-    }else if(value === "Modify") {
-      map.addInteraction(modify);
-
-      
-    }else if(value === "Select") {
-      map.addInteraction(select);
-      map.addInteraction(translate);
-    }else if(value === "Remove"){
-      map.addInteraction(select);
-      
-      select.on("select", () => {
-        document.addEventListener("keydown", (e) => {
-          const keyCode = e.keyCode;
-          if(keyCode === 8) {
-            remove()
-          }
-        })
-      })
-      //좌표로 만든 도형 추가
     }else if(value === "Area"){
+      var coords = extents.area;
       source.clear()
-      var feature = loadArea()
-      source.addFeature(feature);
+      var feature = loadFeatures(coords);
+      source.addFeatures(feature);
       map.addInteraction(select);
       selecting();
     }else if(value === "Building"){
+      var coords = extents.buildings;
       source.clear()
       map.addInteraction(select);
       map.addInteraction(translate);
       
-      var list = loadBuildings()
+      var list = loadFeatures(coords);
       source.addFeatures(list);
       selecting();
     }
     else if(value === "Road"){
+      var coords = extents.roads;
       source.clear()
       map.addInteraction(select);
       map.addInteraction(translate);
-      var list = loadRoads()
+      var list = loadFeatures(coords);
       source.addFeatures(list);
       selecting();
     }
@@ -227,19 +211,14 @@ function addInteractions() {
       map.removeInteraction(select);
       map.removeInteraction(translate);
       source.clear()
-      
+
     }
   
 }
 
 var selecting = () => {
-  select.once("select", (target) => {
+  select.once("select", ()=> {
     map.addInteraction(modify);
-    modify.on("modifyend", (e) => {
-      // const polygon = e.features.getArray()[0].getGeometry();
-      // const coords =  polygon.getCoordinates()[0];
-      // console.log(coords);
-    })
     
     document.addEventListener("keydown", (e) => {
       const keyCode = e.keyCode;
@@ -250,39 +229,40 @@ var selecting = () => {
       }
     })
   })
-  
-}
+  select.on('select',(target) => {
+    if(target.deselected.length > 0) {
 
+      console.log(target.deselected[0].getGeometry().getCoordinates())
+    }
+  })
+}
 
 //도형 제거
+// var selectedFeatures = select.getFeatures();
 function remove() {
-  var selectFeature = select.getFeatures().getArray()[0];
-  // console.log(selectFeature)
-  selectedFeatures.clear()
-  source.removeFeature(selectFeature);
+  var selectFeature = select.getFeatures();
+  if(selectFeature){
+    source.removeFeature(selectFeature.getArray()[0])
+    selectFeature.clear()
+  }
 }
 
-//건물 가져오기
-var loadBuildings = () => {
-  var list =[]; 
-  for(var i=0; i< extents.buildings.length; i++){
-    list.push(new Feature(new Polygon([extents.buildings[i]])))
-  }
+var coordList = document.getElementById('coord_list');
+//좌표 가져오기
+var loadFeatures = (coords) => {
+  coordList.innerHTML = "";
+  var list =[];
+  var btn , br
+  coords.forEach((element) => {
+    var feature = new Feature(new Polygon([element]));
+    btn = document.createElement('button');
+    br= document.createElement('br');
+    btn.setAttribute('value', feature.ol_uid);
+    btn.innerText = feature.ol_uid;
+    list.push(feature);
+    coordList.append(btn,br);
+  }); 
   return list;
-}
-//도로 가져오기
-var loadRoads = () => {
-  var list =[]; 
-  for(var i=0; i< extents.roads.length; i++){
-    list.push(new Feature(new Polygon([extents.roads[i]])))
-  }
-  return list;
-}
-
-//부지영역 가져오기
-var loadArea = () => {
-  var area = new Feature(new Polygon([extents.area])) 
-  return area;
 }
 
 /**
@@ -318,6 +298,7 @@ function tfPoint2(coord) {
 const secu = document.getElementById('securities');
 secu.addEventListener('click', (e)=>{
   e.preventDefault();
+  source.clear()
   showPoint(extents.security1)
   showPoint(extents.security2)
   showPoint(extents.security3)
