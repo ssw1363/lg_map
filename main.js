@@ -227,6 +227,7 @@ function addInteractions() {
       map.removeInteraction(select);
       map.removeInteraction(translate);
       source.clear()
+      
     }
   
 }
