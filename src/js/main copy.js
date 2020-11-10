@@ -6,7 +6,7 @@ import Polygon from 'ol/geom/Polygon';
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style";
 import { Draw, Modify, Snap, Select, Translate } from "ol/interaction";
 import { MousePosition, defaults as defaultControls, FullScreen, ZoomToExtent } from "ol/control";
-import { fromLonLat, transform as tf, transformExtent, Projection } from "ol/proj";
+import { fromLonLat, transform as tf, transformExtent, Projection, get } from "ol/proj";
 import { createStringXY } from "ol/coordinate";
 import { OSM,  Vector as VectorSource , ImageStatic} from "ol/source";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
@@ -75,9 +75,10 @@ var select = new Select({
       // return the coordinates of the first ring of the polygon
       var coordinates = feature.getGeometry().getCoordinates()[0];
       return new MultiPoint(coordinates);
-      }
-    })
-  ]}
+    }
+  })
+]
+}
 );
 var translate = new Translate({
   features: select.getFeatures()
@@ -163,7 +164,7 @@ var image = new Image({
   
 //마우스 좌표 표시
 var mousePositionCtrl = new MousePosition({
-  coordinateFormat: createStringXY(6),
+  coordinateFormat: createStringXY(4),
   projection: 'EPSG:4326',
   className: 'custom-mouse-position',
   target: document.getElementById('mouse-position'),
@@ -331,6 +332,22 @@ typeSelect.onchange = function () {
 
 addInteractions();
 
+
+// 사각영역 좌표변환
+function transform(extent) {
+  return transformExtent(extent, 'EPSG:4326', 'EPSG:3857');
+}
+
+// 좌표변환 3857 -> 4326
+function tfPoint1(coord) {
+  return tf(coord, 'EPSG:3857', 'EPSG:4326');
+}
+// 좌표변환 4326 -> 3857
+function tfPoint2(coord) {
+  return tf(coord, 'EPSG:4326', 'EPSG:3857');
+}
+
+
 //경비실 위치 확인
 const secu = document.getElementById('securities');
 
@@ -388,25 +405,8 @@ function flash(feature) {
   }
 }
 
+
 function addEvent(elem, event, func ) {
-  if (!!window.attachEvent) { elem.attachEvent('on' + event, func); }
-  else  { elem.addEventListener(event, func, false); }
-}
-
-
-
-
-
-// 사각영역 좌표변환
-function transform(extent) {
-  return transformExtent(extent, 'EPSG:4326', 'EPSG:3857');
-}
-
-// 좌표변환 3857 -> 4326
-function tfPoint1(coord) {
-  return tf(coord, 'EPSG:3857', 'EPSG:4326');
-}
-// 좌표변환 4326 -> 3857
-function tfPoint2(coord) {
-  return tf(coord, 'EPSG:4326', 'EPSG:3857');
+  if (!!window.attachEvent) elem.attachEvent('on' + event, func);
+  else                      elem.addEventListener(event, func, false);
 }
