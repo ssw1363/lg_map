@@ -143,7 +143,7 @@ map_type.onchange= function(){
     target: "map",
     view: view
   });
-
+  
 };
 
 var projection = new Projection({
@@ -171,7 +171,7 @@ var image = new Image({
   
 //마우스 좌표 표시
 var mousePositionCtrl = new MousePosition({
-  coordinateFormat: createStringXY(6),
+  coordinateFormat: createStringXY(8),
   projection: 'EPSG:4326',
   className: 'custom-mouse-position',
   target: document.getElementById('mouse-position'),
