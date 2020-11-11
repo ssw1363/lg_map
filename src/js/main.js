@@ -86,24 +86,33 @@ var modify = new Modify({ features: select.getFeatures() });
 var draw, snap; // global so we can remove them later
 
 
-var geoType = document.getElementById("geo_type");
+var map_type = document.getElementById("mapType");
 var typeSelect = document.getElementById("type");
-var geoValue = geoType.value;
-var extent_type ;
-function setGeoType() {
-  if(geoType.value === 'Constant'){
-    extent_type = extents.LG2
-  }else if(geoType.value === 'Coord') {
+var map_image = extents.mapType.skyView, extent_type;
+
+function setMapType() {
+  if(map_type.value === 'SkyView'){
+    map_image = extents.mapType.skyView
     extent_type = extents.LG
+  }else if(map_type.value === 'Custom') {
+    map_image = extents.mapType.customMap
+    extent_type = extents.LG2
   }
-  return extent_type;
+  var result = {extent_type: extent_type, map_image: map_image}
+  return result;
 }
 
-setGeoType();
-geoType.onchange= function(){
-  extent_type = setGeoType();
-  console.log(extent_type)
-  document.getElementById('map').innerHTML = '';
+setMapType();
+console.log(map_image)
+console.log(extent_type)
+
+
+map_type.onchange= function(){
+  var result = setMapType();
+  viewport.innerHTML = '';
+  extent_type = result.extent_type;
+  map_image = result.map_image;
+  
   projection = new Projection({
     code: 'xkcd-image',
     units: 'pixels',
@@ -111,7 +120,7 @@ geoType.onchange= function(){
   });
   image = new Image({
     source: new ImageStatic({
-      url : 'http://mpole.co.kr/resource/img/mpole/LG평택map_9000.png',
+      url : map_image,
       crossOrigin: '',
       projection: projection,
       imageExtent: extent_type
@@ -153,8 +162,7 @@ var raster = new TileLayer({
 
 var image = new Image({
   source: new ImageStatic({
-    // url : 'http://mpole.co.kr/resource/img/mpole/LG.png',
-    url : 'http://mpole.co.kr/resource/img/mpole/LG평택map_9000.png',
+    url : map_image,
     crossOrigin: '',
     projection: projection,
     imageExtent: extent_type
@@ -230,28 +238,31 @@ function addInteractions() {
       });
     // 도형 수정 (수정한 좌표영역 )
     }else if(value === "Area"){
-      var coords = extents.area;
+      var coords = extents.area;      
+      var el = extents.area_name;
       source.clear()
-      var feature = loadFeatures(coords);
+      var feature = loadFeatures(coords,el);
       source.addFeatures(feature);
       map.addInteraction(select);
       selecting();
     }else if(value === "Building"){
       var coords = extents.buildings;
+      var el = extents.buildings_name
       source.clear()
       map.addInteraction(select);
       map.addInteraction(translate);
       
-      var list = loadFeatures(coords);
+      var list = loadFeatures(coords,el);
       source.addFeatures(list);
       selecting();
     }
     else if(value === "Road"){
       var coords = extents.roads;
+      var el = extents.roads_name
       source.clear()
       map.addInteraction(select);
       map.addInteraction(translate);
-      var list = loadFeatures(coords);
+      var list = loadFeatures(coords,el);
       source.addFeatures(list);
       selecting();
     }
@@ -293,17 +304,17 @@ var remove = () => {
 var coordList = document.getElementById('coord_list');
 
 //좌표 가져오기
-var loadFeatures = (coords) => {
+var loadFeatures = (coords, name) => {
   coordList.innerHTML = "";
   var list =[];
   var btn , br
-  coords.forEach((element) => {
+  coords.forEach((element, i) => {
     var feature = new Feature(new Polygon([element]));
     btn = document.createElement('button');
     br= document.createElement('br');
     btn.setAttribute('value', feature.ol_uid);
     btn.setAttribute('class', 'btnList');
-    btn.innerText = feature.ol_uid;
+    btn.innerText = name[i];
     list.push(feature);
     coordList.append(btn,br);
 

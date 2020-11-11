@@ -5,16 +5,17 @@
     <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
     <link rel="stylesheet" href="./src/css/style.css">
     <script src="https://unpkg.com/elm-pep"></script>
-    
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/build/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.4.3/css/ol.css">
   </head>
   <body>
     <div id="map" class="map"></div>
     <div id="coord_list"></div>
     <form class="form-inline">
-      <label>Geometry type &nbsp;</label>
-      <select id="geo_type" name='geo_type'>
-        <option value="Coord">Coord</option> 
-        <option value="Constant">Constant</option>
+      <label>Map type &nbsp;</label>
+      <select id="mapType" name='mapType'>
+        <option value="SkyView" selected="selected">SkyView</option>
+        <option value="Custom">ImageMap</option> 
       </select>
       <label>Coords load &nbsp;</label>
       <select id="type">
