@@ -103,9 +103,6 @@ function setMapType() {
 }
 
 setMapType();
-console.log(map_image)
-console.log(extent_type)
-
 
 map_type.onchange= function(){
   var result = setMapType();
@@ -198,7 +195,7 @@ var view = new View({
   projection: projection,
   zoom: initialZoom,
   minZoom: 2,
-  maxZoom: 5 
+  maxZoom: 7 
 })
 //지도 생성
 var map = new Map({
@@ -220,10 +217,10 @@ addEvent(window, 'resize', ()=>{
 function addInteractions() {
   var value = typeSelect.value;
   //polygone 선택 시 그리기
-  if(value === "Polygon"){
+  if(value === "Draw"){
         draw = new Draw({
           source: source,
-          type: "Polygon"
+          type: "Polygon",
         });
       map.addInteraction(draw);
       snap = new Snap({ source: source });
@@ -236,6 +233,7 @@ function addInteractions() {
         console.log(coords)
         
       });
+      
     // 도형 수정 (수정한 좌표영역 )
     }else if(value === "Area"){
       var coords = extents.area;      
