@@ -18,6 +18,9 @@ import {getVectorContext} from 'ol/render';
 import {easeOut} from 'ol/easing';
 import {unByKey} from 'ol/Observable';
 
+console.log(__dirname);
+
+
 //지도 위치 + 좌표변환
 const center = [127.0888, 37.1240];
 const transCenter = fromLonLat(center);
@@ -130,7 +133,7 @@ map_type.onchange= function(){
   view = new View({
     center: getCenter(extent_type),
     projection: projection,
-    zoom: initialZoom,
+    zoom: 2,
     minZoom: 2,
     maxZoom: 5 
   })
@@ -193,7 +196,7 @@ var initialZoom = getMinZoom();
 var view = new View({
   center: getCenter(extent_type),
   projection: projection,
-  zoom: initialZoom,
+  zoom: 2,
   minZoom: 2,
   maxZoom: 7 
 })
