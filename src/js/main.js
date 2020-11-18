@@ -3,7 +3,7 @@ import Map from "ol/Map";
 import View from "ol/View";
 import Feature from 'ol/Feature';
 import Polygon from 'ol/geom/Polygon';
-import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style";
+import { Circle as CircleStyle, Fill, Stroke, Style, Icon } from "ol/style";
 import { Draw, Modify, Snap, Select, Translate } from "ol/interaction";
 import { MousePosition, defaults as defaultControls, FullScreen, ZoomToExtent } from "ol/control";
 import { fromLonLat, transform as tf, transformExtent, Projection } from "ol/proj";
@@ -13,12 +13,37 @@ import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
 import Image from "ol/layer/image";
 import {getCenter} from 'ol/extent';
 import {extents} from './coord';
-import {Point ,MultiPoint} from 'ol/geom';
+import {Point ,MultiPoint, LineString} from 'ol/geom';
 import {getVectorContext} from 'ol/render';
 import {easeOut} from 'ol/easing';
 import {unByKey} from 'ol/Observable';
 
-console.log(__dirname);
+var styleFunction = function (feature) {
+  var geometry = feature.getGeometry();
+    
+    var coords = geometry.getCoordinates();
+		var start = coords[0];
+		var end = coords[1];
+    var dx = end[0] - start[0];
+    var dy = end[1] - start[1];
+    var rotation = Math.atan2(dy, dx);
+    // arrows
+    styles.push(
+      new Style({
+        geometry: new Point(end),
+        image: new Icon({
+          src: 'https://openlayers.org/en/v6.4.3/examples/data/arrow.png',
+          // src: '../../resource/arrow.png',
+          anchor: [0.75, 0.5],
+          rotateWithView: true,
+          rotation: -rotation,
+        }),
+      })
+    );
+
+
+  return styles;
+};
 
 
 //지도 위치 + 좌표변환
@@ -35,7 +60,8 @@ var vector = new VectorLayer({
     }),
     stroke: new Stroke({
       color: "#ffcc33",
-      width: 2
+      width: 2,
+      geometry: styleFunction
     }),
     image: new CircleStyle({
       radius: 7,
@@ -44,14 +70,7 @@ var vector = new VectorLayer({
       })
     })
   }),
-  new Style({
-    image: new CircleStyle({
-      radius: 0,
-      fill: new Fill({
-        // color: 'orange'
-      }),
-    }),
-  })
+  
 ]
 });
 
@@ -133,6 +152,7 @@ map_type.onchange= function(){
   view = new View({
     center: getCenter(extent_type),
     projection: projection,
+    extent: extent_type,
     zoom: 2,
     minZoom: 2,
     maxZoom: 5 
@@ -147,8 +167,8 @@ map_type.onchange= function(){
 };
 
 var projection = new Projection({
-  code: 'xkcd-image',
-  units: 'pixels',
+  code: 'EPSG:4326',
+  // units: 'pixels',
   extent: extent_type,
 });
 
@@ -195,15 +215,16 @@ function getMinZoom() {
 var initialZoom = getMinZoom();
 var view = new View({
   center: getCenter(extent_type),
+  extent: extent_type,
   projection: projection,
-  zoom: 2,
+  zoom: 4,
   minZoom: 2,
-  maxZoom: 7 
+  // maxZoom: 7 
 })
 //지도 생성
 var map = new Map({
   controls : defaultControls().extend([new FullScreen(), tocenter , mousePositionCtrl]),
-  layers: [  image, vector ],
+  layers: [ raster , vector ],
   target: "map",
   view: view
 });
@@ -226,8 +247,8 @@ function addInteractions() {
           type: "Polygon",
         });
       map.addInteraction(draw);
-      snap = new Snap({ source: source });
-      map.addInteraction(snap);
+      // snap = new Snap({ source: source });
+      // map.addInteraction(snap);
       
       //다각형의 영역 좌표 출력
       draw.on('drawend',(e) => {
@@ -266,6 +287,18 @@ function addInteractions() {
       var list = loadFeatures(coords,el);
       source.addFeatures(list);
       selecting();
+    }else if(value === "Log_draw"){
+      var coords = extents.route;
+      draw = new Draw({
+        source: source,
+        type: "LineString",
+      });
+      map.addInteraction(select);
+      source.clear();
+      var list = loadLine(coords);
+      console.log(list)
+      source.addFeatures(list);
+      
     }
     else {
       map.removeInteraction(draw);
@@ -318,13 +351,25 @@ var loadFeatures = (coords, name) => {
     btn.innerText = name[i];
     list.push(feature);
     coordList.append(btn,br);
-
+    console.log(feature)
     addEvent(btn, "click", (e)=> {
       e.preventDefault();
       selectFeature.clear()
       var features = source.getFeatureByUid(e.target.value);
       selectFeature.push(features)
     })
+  }); 
+  return list;
+}
+
+//경로 가져오기
+var loadLine = (coords) => {
+  coordList.innerHTML = "";
+  var list =[];
+  coords.forEach((element) => {
+    
+    var route = new Feature(new LineString(element));
+    list.push(route);
   }); 
   return list;
 }
@@ -422,3 +467,5 @@ function tfPoint1(coord) {
 function tfPoint2(coord) {
   return tf(coord, 'EPSG:4326', 'EPSG:3857');
 }
+
+
