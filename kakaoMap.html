@@ -6,14 +6,32 @@
   </head>
   <body>
     <div id="map" style="width: 100%; height: 800px"></div>
-    <p><em>지도를 클릭해주세요!</em></p>
+    <p>
+      <em>지도를 클릭해주세요! </em>
+      <button onclick="copy_coord()">좌표 복사</button>
+    </p>
     <p id="result"></p>
-
+    <link rel="stylesheet" type="text/css" href="./src/css/jquery.toast.css" />
+    <script
+      type="text/javascript"
+      src="http://code.jquery.com/jquery-1.6.3.min.js"
+    ></script>
+    <script type="text/javascript" src="./src/js/jquery.toast.js"></script>
     <script
       type="text/javascript"
       src="//dapi.kakao.com/v2/maps/sdk.js?appkey=148f5da334caeb99a26c33f28d32ce06"
     ></script>
     <script>
+      function copy_coord() {
+        const $textarea = document.createElement("textarea");
+        document.body.appendChild($textarea);
+        var resultDiv = document.getElementById("result");
+        $textarea.value = resultDiv.innerText;
+        $textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild($textarea);
+        $.toast("클립보드에 복사되었습니다.", { type: "info", duration: 2000 });
+      }
       var mapContainer = document.getElementById("map"), // 지도를 표시할 div
         mapOption = {
           center: new kakao.maps.LatLng(37.517054900478534, 127.05839206097377), // 지도의 중심좌표
@@ -35,8 +53,10 @@
         // 클릭한 위도, 경도 정보를 가져옵니다
         var latlng = mouseEvent.latLng;
 
-        var message = "[" + latlng.getLng() + ", ";
-        message += latlng.getLat() + "],<br>";
+        // var message = "[" + latlng.getLng() + ", ";
+        // message += latlng.getLat() + "],<br>";
+        var message = '("' + latlng.getLng() + '", "';
+        message += latlng.getLat() + '"),<br>';
         addMarker(mouseEvent.latLng);
         var resultDiv = document.getElementById("result");
         resultDiv.innerHTML += message;
